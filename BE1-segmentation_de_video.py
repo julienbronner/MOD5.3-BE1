@@ -4,7 +4,6 @@ Created on Wed Oct 21 08:24:53 2020
 
 @author: julbr
 """
-
 import cv2
 import numpy as np
 
@@ -34,5 +33,3 @@ while success:
   success,image = vidObj.read()
   Mat[count] = image         # save each frame into Mat
   count += 1
-  if count >= 10:
-      break
