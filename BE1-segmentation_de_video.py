@@ -12,10 +12,10 @@ import numpy as np
 vidObj = cv2.VideoCapture('Pub_C+_176_144.mp4')
 
 # Determine the height and width of the frames.
-if (vidObj.isOpened()== False): 
+if not vidObj.isOpened(): 
 	  print("Error opening video stream or file")
 
-if vidObj.isOpened(): 
+else: 
 
     nb_frames = int(vidObj.get(7))
     vidWidth  = int(vidObj.get(3))
@@ -23,13 +23,15 @@ if vidObj.isOpened():
 
     print('Largeur : ', vidWidth, ' ; Hauteur : ', vidHeight, " ; Nb d'images : ", nb_frames)
 
-# Create a Python movie structure array, Mat.
-Mat = np.zeros((nb_frames, vidHeight, vidWidth, 3))
-
-success,image = vidObj.read()
-count = 0
-success = True
-while success:
-  success,image = vidObj.read()
-  Mat[count] = image         # save each frame into Mat
-  count += 1
+    # Create a Python movie structure array, Mat.
+    Mat = np.zeros((nb_frames, vidHeight, vidWidth, 3))
+    
+    success,image = vidObj.read()
+    count = 0
+    success = True
+    while success:
+      success,image = vidObj.read()
+      Mat[count] = image         # save each frame into Mat
+      count += 1
+      if count >= 10:
+          break
