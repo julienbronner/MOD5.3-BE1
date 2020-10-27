@@ -44,18 +44,21 @@ else:
     while count < limit :
         success,image = vidObj.read()
         if success:
-            Mat[count] = image         # save each frame into Mat
-            Red.append(int(np.sum(image[:,:,0])))
+            Mat[count] = image         # Enregistrement des images dans Mat
+            Red.append(int(np.sum(image[:,:,2])))       # L'ordre d'OpenCV n'est pas RGB mais BGR
             Green.append(int(np.sum(image[:,:,1])))
-            Blue.append(int(np.sum(image[:,:,2])))
+            Blue.append(int(np.sum(image[:,:,0])))
             count += 1
         else :
             break
-    """
-    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Red, color = 'red')
-    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Green, color = 'green')
-    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Blue, color = 'blue')
-    """
+    
+    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Red, label = "Rouge", color = 'red')
+    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Green, label = "Vert", color = 'green')
+    plt.plot([x for x in range(0, min(limit, nb_frames-3))], Blue, label = "Bleu", color = 'blue')
+    plt.xlabel("Images")
+    plt.ylabel("Quantification de l'intensité des couleurs")
+    plt.legend()
+    plt.savefig('Evolution_des_couleurs.png', dpi=300)
 
     
     Taux_echec_cut = []
@@ -63,7 +66,7 @@ else:
     Nb_f_neg_cut = []
     Nb_erreur = []
     
-    Nb_echa = 600
+    Nb_echa = 100
     
     for seuil in np.linspace(5e4, 7e5, Nb_echa):
         Noir = []
@@ -113,7 +116,7 @@ else:
             Nb_f_pos_cut.append(nb_f_pos_cut)
             Nb_f_neg_cut.append(nb_f_neg_cut)
             Nb_erreur.append(nb_erreur)
-        
+    """  
     print()
     print(min(Taux_echec_cut), "; Nb d'erreurs :", Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))])
     print()
@@ -121,11 +124,11 @@ else:
     plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_f_pos_cut, label="Nombre de faux positifs", color='blue')
     plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_f_neg_cut, label="Nombre de faux negatifs", color ='red')
     plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_erreur, label="Nombre d'erreurs", color ='black')
-    #plt.set_xlabel("Seuil")
-    #plt.set_ylabel("Nombre d'erreur")
+    plt.xlabel("Seuil")
+    plt.ylabel("Nombre d'erreur")
     plt.legend()
-    
-
+    plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection.png', dpi=300)
+    """
         
     """
     Taux_echec_cut = 1-len(Cut.intersection(Cut_verif))/len(Cut_verif)
