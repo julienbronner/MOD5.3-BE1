@@ -8,24 +8,23 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Construct a VideoReader object associated with the sample file.
+# Construit un objet VideoReader associé au fichier audio.
 
 vidObj = cv2.VideoCapture('C:/Users/Loïc/Documents/Centrale/Semestre 9/Traitement et analyse des données visuelles et sonores/BE1_Traitement_et_analyse_des_données_visuelles_et_sonores 2020-21/Pub_C+_176_144.mp4')
 
-# Determine the height and width of the frames.
 if not vidObj.isOpened(): 
-	  print("Error opening video stream or file")
+	  print("Erreur lors de l'ouverture du fichier audio")
 
 else: 
 
-    nb_frames = int(vidObj.get(7))
-    vidWidth  = int(vidObj.get(3))
-    vidHeight = int(vidObj.get(4))
-    fps = int(vidObj.get(cv2.CAP_PROP_FPS))
+    nb_frames = int(vidObj.get(7)) # On mesure le nombre d'image de la vidéo
+    vidWidth  = int(vidObj.get(3)) # Nb de pixels en largeur
+    vidHeight = int(vidObj.get(4)) # En hauteur
+    fps = int(vidObj.get(cv2.CAP_PROP_FPS)) # On mesure le nombre d'image par seconde
 
-    print('Largeur : ', vidWidth, ' ; Hauteur : ', vidHeight, " ; Nb d'images : ", nb_frames)
+    print('Largeur :', vidWidth, '; Hauteur :', vidHeight, "; Nb d'images :", nb_frames, "; fps :", fps)
 
-    # Create a Python movie structure array, Mat.
+    # On stocke les images (info rgb par pixel) dans un np.array
     Mat = np.zeros((nb_frames, vidHeight, vidWidth, 3))
     Red = []
     Green = []
@@ -38,7 +37,7 @@ else:
     # Petit échantillon pour les tests
     limit = nb_frames
     
-    # Liste des coupures réelles, afin de comparer nos résultats
+    # Liste des coupures  et noirs réels, afin de comparer nos résultats
     Cut_verif = [52, 142, 163, 187, 200, 221, 248, 256, 268, 307, 485, 526, 561, 582, 595, 615, 635, 664, 690, 705, 720, 746, 821, 853, 903, 956, 975, 998, 1027, 1062, 1099, 1120, 1144, 1177, 1220, 1255, 1293, 1335, 1367, 1444, 1582, 1655, 1735, 1812, 1871, 1895, 1909, 1960, 2016, 2106, 2147, 2184, 2243, 2487, 2526, 2617, 2688, 2775, 2808, 2829, 2858, 2881, 2917, 2934, 2962, 2978, 3011, 3086, 3179]
     Noir_verif = [42, 552, 812, 1573, 2007, 2766, 3277]
     
@@ -52,36 +51,96 @@ else:
             count += 1
         else :
             break
-    
+    """
     plt.plot([x for x in range(0, min(limit, nb_frames-3))], Red, color = 'red')
     plt.plot([x for x in range(0, min(limit, nb_frames-3))], Green, color = 'green')
     plt.plot([x for x in range(0, min(limit, nb_frames-3))], Blue, color = 'blue')
+    """
+
     
-    # On répèrtorie les cut détectés par des grandes variations de chaque couleurs
-    RedCut = [] 
-    GreenCut = []
-    BlueCut = []
-    seuil = 3e5
+    Taux_echec_cut = []
+    Nb_f_pos_cut = []
+    Nb_f_neg_cut = []
+    Nb_erreur = []
     
-    for i in range(2,len(Red)):
-        if np.abs(Red[i]-Red[i-1]) > seuil:
-            RedCut.append(i)
-            # print("Coupure des rouges à la frame ", i+1)
-        if np.abs(Green[i]-Green[i-1]) > seuil:
-            GreenCut.append(i)
-        if np.abs(Blue[i]-Blue[i-1]) > seuil:
-            BlueCut.append(i)
+    Nb_echa = 600
     
-    # Puis on considère que c'est un cut si les variations sont communes à chaque couleur
-    Cut = []
-    Noir = []
-    for i in RedCut:
-        if i in BlueCut:
-            if i in GreenCut :
-                Cut.append(i)
-                if Red[i] < 0.2e6 and Green[i] < 0.2e6 and Blue[i] < 0.2e6 :
-                    print("Plan noir à la frame ", i+1)
+    for seuil in np.linspace(5e4, 7e5, Nb_echa):
+        Noir = []
+        # On répèrtorie les cut détectés par des grandes variations de chaque couleurs
+        RedCut = [] 
+        GreenCut = []
+        BlueCut = []
+        
+        for i in range(2,len(Red)):
+            if np.abs(Red[i]-Red[i-1]) > seuil:
+                RedCut.append(i)
+                # print("Coupure des rouges à la frame ", i+1)
+            if np.abs(Green[i]-Green[i-1]) > seuil:
+                GreenCut.append(i)
+            if np.abs(Blue[i]-Blue[i-1]) > seuil:
+                BlueCut.append(i)
+            if Red[i] < 0.2e6 and Green[i] < 0.2e6 and Blue[i] < 0.2e6 :
+                if len(Noir) == 0 or i > Noir[-1]+fps/2: # On considère qu'un plan noir dure moins de 0.5s
+                    Noir.append(i+1)
+                    # print("Plan noir à la frame ", i+1)
                     # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
-                else:
-                    print("Coupure à la frame ", i+1)
-                    # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
+        
+        # Puis on considère que c'est un cut si les variations sont communes à chaque couleur
+        Cut = []
+        for i in RedCut:
+            if i in BlueCut and i in GreenCut and i+1 not in Noir:   
+                Cut.append(i+1)
+                # print("Coupure à la frame ", i+1)
+                # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
+                        
+        # On compare à présent les résultats à la vérité sur terrain
+        Noir = set(Noir)
+        Cut = set(Cut)
+        Noir_verif = set(Noir_verif)
+        Cut_verif = set(Cut_verif)
+        
+        if len(Cut) == 0 :
+            print("Erreur : seuil trop grand")
+            break
+        else:
+            taux_echec_cut = max(1-len(Cut.intersection(Cut_verif))/len(Cut_verif), 1-len(Cut.intersection(Cut_verif))/len(Cut))
+            nb_f_pos_cut = len(Cut.difference(Cut_verif))
+            nb_f_neg_cut = len(Cut_verif.difference(Cut))
+            nb_erreur = nb_f_pos_cut + nb_f_neg_cut
+        
+            Taux_echec_cut.append(taux_echec_cut)
+            Nb_f_pos_cut.append(nb_f_pos_cut)
+            Nb_f_neg_cut.append(nb_f_neg_cut)
+            Nb_erreur.append(nb_erreur)
+        
+    print()
+    print(min(Taux_echec_cut), "; Nb d'erreurs :", Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))])
+    print()
+    # print(min(Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))]))
+    plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_f_pos_cut, label="Nombre de faux positifs", color='blue')
+    plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_f_neg_cut, label="Nombre de faux negatifs", color ='red')
+    plt.plot(np.linspace(1e4, 5e6, Nb_echa), Nb_erreur, label="Nombre d'erreurs", color ='black')
+    #plt.set_xlabel("Seuil")
+    #plt.set_ylabel("Nombre d'erreur")
+    plt.legend()
+    
+
+        
+    """
+    Taux_echec_cut = 1-len(Cut.intersection(Cut_verif))/len(Cut_verif)
+    Nb_f_pos_cut = len(Cut.difference(Cut_verif))
+    Nb_f_neg_cut = len(Cut_verif.difference(Cut))
+    Taux_echec_noir = 1-len(Noir.intersection(Noir_verif))/len(Noir_verif)
+    Nb_f_pos_noir = len(Noir.difference(Noir_verif))
+    Nb_f_neg_noir = len(Noir_verif.difference(Noir))
+    
+    print()
+    print("Taux d'échec pour la détection de coupures :", Taux_echec_cut)
+    print("Nombre de faux positifs (coupures) : ", Nb_f_pos_cut)
+    print("Nombre de faux négatifs (coupures) : ", Nb_f_neg_cut)
+    print()
+    print("Taux d'échec pour la détection de plans noirs :", Taux_echec_noir)
+    print("Nombre de faux positifs (noirs) : ", Nb_f_pos_noir)
+    print("Nombre de faux négatifs (noirs) : ", Nb_f_neg_noir)
+    """
