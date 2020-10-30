@@ -34,14 +34,14 @@ def Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
         """
     # Puis on considère que c'est un cut si les variations sont communes à chaque couleur
     Cut = []
-    for i in RedCut:
-        if i in BlueCut and i in GreenCut and i+1 not in Noir : # Ajouter "and i+1 not in Noir" si besoin 
+    for i in GreenCut:
+        #if i in RedCut and i in BlueCut : # Ajouter "and i+1 not in Noir" si besoin 
             # Cut.append(i+1)
             
-            if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
-                Noir.append(i+1)
-            else :
-                Cut.append(i+1)
+        if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
+            Noir.append(i+1)
+        else :
+            Cut.append(i+1)
             
             # print("Coupure à la frame ", i+1)
             # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
@@ -57,12 +57,14 @@ def Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
         if cut == True:
             nb_f_pos = len(Cut.difference(Cut_verif))
             nb_f_neg = len(Cut_verif.difference(Cut))
-            print(Cut)
+            # print("CUT :", Cut)
+            # print("NOIR :", Noir)
 
         else :
             nb_f_pos = len(Noir.difference(Noir_verif))
             nb_f_neg = len(Noir_verif.difference(Noir))
-            print(Noir)
+            # print("CUT :", Cut)
+            # print("NOIR :", Noir)
             
         nb_erreur = nb_f_pos + nb_f_neg
         Nb_f_pos.append(nb_f_pos)
@@ -134,17 +136,17 @@ else:
     Nb_erreur = []
     
     Nb_echa = 500
-    Seuils = np.linspace(4, 20, Nb_echa)
+    Seuils = np.linspace(4, 30, Nb_echa)
     
     cut = True
     
     if cut :
-        seuil_noir = 0.5
+        seuil_noir = 7.91
         for seuil_cut in Seuils:
             # print("Seuil cut :", seuil_cut)
             Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
     else :
-        seuil_cut = 7.8
+        seuil_cut = 11.56
         for seuil_noir in Seuils:
             # print("Seuil noir :", seuil_noir)
             Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
