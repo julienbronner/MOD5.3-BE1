@@ -25,17 +25,24 @@ def Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
             GreenCut.append(i)
         if np.abs(Blue[i]-Blue[i-1]) > seuil_cut:
             BlueCut.append(i)
+        """
         if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
             if len(Noir) == 0 or i > Noir[-1]+fps: # On considère qu'un plan noir dure moins de 0.5s
                 Noir.append(i+1)
-                # print("Plan noir à la frame ", i+1)
-                # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
-    
+            # print("Plan noir à la frame ", i+1)
+            # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
+        """
     # Puis on considère que c'est un cut si les variations sont communes à chaque couleur
     Cut = []
     for i in RedCut:
-        if i in BlueCut and i in GreenCut and i+1 not in Noir:   
-            Cut.append(i+1)
+        if i in BlueCut and i in GreenCut and i+1 not in Noir : # Ajouter "and i+1 not in Noir" si besoin 
+            # Cut.append(i+1)
+            
+            if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
+                Noir.append(i+1)
+            else :
+                Cut.append(i+1)
+            
             # print("Coupure à la frame ", i+1)
             # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
                     
@@ -50,15 +57,18 @@ def Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
         if cut == True:
             nb_f_pos = len(Cut.difference(Cut_verif))
             nb_f_neg = len(Cut_verif.difference(Cut))
+            print(Cut)
 
         else :
             nb_f_pos = len(Noir.difference(Noir_verif))
             nb_f_neg = len(Noir_verif.difference(Noir))
+            print(Noir)
             
         nb_erreur = nb_f_pos + nb_f_neg
         Nb_f_pos.append(nb_f_pos)
         Nb_f_neg.append(nb_f_neg)
         Nb_erreur.append(nb_erreur)
+    
     return None
 
 ##### Main #####
@@ -77,7 +87,7 @@ else:
     vidHeight = int(vidObj.get(4)) # En hauteur
     fps = int(vidObj.get(cv2.CAP_PROP_FPS)) # On mesure le nombre d'image par seconde
 
-    print('Largeur :', vidWidth, '; Hauteur :', vidHeight, "; Nb d'images :", nb_frames, "; fps :", fps)
+    # print('Largeur :', vidWidth, '; Hauteur :', vidHeight, "; Nb d'images :", nb_frames, "; fps :", fps)
 
     # On stocke les images (info rgb par pixel) dans un np.array
     Mat = np.zeros((nb_frames, vidHeight, vidWidth, 3))
@@ -100,9 +110,9 @@ else:
         success,image = vidObj.read()
         if success:
             Mat[count] = image         # Enregistrement des images dans Mat
-            Red.append(int(np.sum(image[:,:,2])))       # L'ordre d'OpenCV n'est pas RGB mais BGR
-            Green.append(int(np.sum(image[:,:,1])))
-            Blue.append(int(np.sum(image[:,:,0])))
+            Red.append(np.sum(image[:,:,2])/(vidWidth*vidHeight))      # L'ordre d'OpenCV n'est pas RGB mais BGR
+            Green.append(np.sum(image[:,:,1])/(vidWidth*vidHeight))
+            Blue.append(np.sum(image[:,:,0])/(vidWidth*vidHeight))
             count += 1
         else :
             break
@@ -112,60 +122,49 @@ else:
     plt.plot(Xrange, Red, label = "Rouge", color = 'red')
     plt.plot(Xrange, Green, label = "Vert", color = 'green')
     plt.plot(Xrange, Blue, label = "Bleu", color = 'blue')
-    plt.plot(Xrange, np.ones(len(Blue))*0.2e6, '-.', label  = 'Seuil de détection des noirs', color = 'black')
+    # plt.plot(Xrange, np.ones(len(Blue))*7.8, '-.', label  = 'Seuil de détection des noirs', color = 'black')
     plt.xlabel("Images")
     plt.ylabel("Quantification de l'intensité des couleurs")
     plt.legend()
     # plt.savefig('Visualisation du seuil de détection des noirs.png', dpi=300)
     """
+    
     Nb_f_pos = []
     Nb_f_neg = []
     Nb_erreur = []
     
     Nb_echa = 500
-    Seuils = np.linspace(1e5, 3.2e5, Nb_echa)
+    Seuils = np.linspace(4, 20, Nb_echa)
     
-    cut = False
+    cut = True
     
-    if cut == True:
-        seuil_noir = 0.2e6
+    if cut :
+        seuil_noir = 0.5
         for seuil_cut in Seuils:
+            # print("Seuil cut :", seuil_cut)
             Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
     else :
-        seuil_cut = 2.45e5
+        seuil_cut = 7.8
         for seuil_noir in Seuils:
+            # print("Seuil noir :", seuil_noir)
             Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
-      
+    
     nb_erreur_min = min(Nb_erreur)
     indices = [i for i, err in enumerate(Nb_erreur) if err == nb_erreur_min]
     print()
     print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
     print()
-
+    
     # print(min(Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))]))
-    plt.plot(Seuils, Nb_f_pos, label="Nombre de faux positifs", color='blue')
-    plt.plot(Seuils, Nb_f_neg, label="Nombre de faux negatifs", color ='red')
-    plt.plot(Seuils, Nb_erreur, label="Nombre d'erreurs", color ='black')
+    plt.plot(Seuils, Nb_f_pos, label="Nombre de faux positifs", color = 'blue')
+    plt.plot(Seuils, Nb_f_neg, label="Nombre de faux negatifs", color = 'red')
+    plt.plot(Seuils, Nb_erreur, '--', label="Nombre d'erreurs", color = 'black')
     plt.xlabel("Seuil")
     plt.ylabel("Nombre d'erreur")
     plt.legend()
-    # plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection.png', dpi=300)
-
-        
-    """
-    Taux_echec_cut = 1-len(Cut.intersection(Cut_verif))/len(Cut_verif)
-    Nb_f_pos_cut = len(Cut.difference(Cut_verif))
-    Nb_f_neg_cut = len(Cut_verif.difference(Cut))
-    Taux_echec_noir = 1-len(Noir.intersection(Noir_verif))/len(Noir_verif)
-    Nb_f_pos_noir = len(Noir.difference(Noir_verif))
-    Nb_f_neg_noir = len(Noir_verif.difference(Noir))
     
-    print()
-    print("Taux d'échec pour la détection de coupures :", Taux_echec_cut)
-    print("Nombre de faux positifs (coupures) : ", Nb_f_pos_cut)
-    print("Nombre de faux négatifs (coupures) : ", Nb_f_neg_cut)
-    print()
-    print("Taux d'échec pour la détection de plans noirs :", Taux_echec_noir)
-    print("Nombre de faux positifs (noirs) : ", Nb_f_pos_noir)
-    print("Nombre de faux négatifs (noirs) : ", Nb_f_neg_noir)
-    """
+    
+    if cut :
+        plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection.png', dpi=300)
+    else :
+        plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_2.png', dpi=300)
