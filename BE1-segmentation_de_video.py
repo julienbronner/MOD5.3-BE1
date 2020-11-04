@@ -35,13 +35,13 @@ def Analyse_couleur(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
     # Puis on considère que c'est un cut si les variations sont communes à chaque couleur
     Cut = []
     for i in GreenCut:
-        #if i in RedCut and i in BlueCut : # Ajouter "and i+1 not in Noir" si besoin 
+        if i in RedCut and i in BlueCut : # Ajouter "and i+1 not in Noir" si besoin 
             # Cut.append(i+1)
             
-        if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
-            Noir.append(i+1)
-        else :
-            Cut.append(i+1)
+            if Red[i] < seuil_noir and Green[i] < seuil_noir and Blue[i] < seuil_noir :
+                Noir.append(i+1)
+            else :
+                Cut.append(i+1)
             
             # print("Coupure à la frame ", i+1)
             # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
@@ -92,7 +92,6 @@ else:
     # print('Largeur :', vidWidth, '; Hauteur :', vidHeight, "; Nb d'images :", nb_frames, "; fps :", fps)
 
     # On stocke les images (info rgb par pixel) dans un np.array
-    Mat = np.zeros((nb_frames, vidHeight, vidWidth, 3))
     Red = []
     Green = []
     Blue = []
@@ -111,7 +110,6 @@ else:
     while count < limit :
         success,image = vidObj.read()
         if success:
-            Mat[count] = image         # Enregistrement des images dans Mat
             Red.append(np.sum(image[:,:,2])/(vidWidth*vidHeight))      # L'ordre d'OpenCV n'est pas RGB mais BGR
             Green.append(np.sum(image[:,:,1])/(vidWidth*vidHeight))
             Blue.append(np.sum(image[:,:,0])/(vidWidth*vidHeight))
@@ -138,7 +136,7 @@ else:
     Nb_echa = 500
     Seuils = np.linspace(4, 30, Nb_echa)
     
-    cut = True
+    cut = False
     
     if cut :
         seuil_noir = 7.91
