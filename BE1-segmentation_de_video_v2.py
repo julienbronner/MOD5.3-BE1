@@ -43,9 +43,9 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     while count < limit :
         success,image = vidObj.read()
         if success:
-            Grey.append(np.sum(image[:,:,0]/3 +
-                              image[:,:,1]/3 +
-                              image[:,:,2]/3)/(vidWidth*vidHeight))
+            Grey.append(np.sum(image[:,:,0]*0.11 +
+                              image[:,:,1]*0.59 +
+                              image[:,:,2]*0.3)/(vidWidth*vidHeight))
             count += 1
         else :
             break
