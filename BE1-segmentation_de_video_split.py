@@ -9,8 +9,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-##### Fonctions #####
-
+#%% Fonctions
 def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
     # On stocke les images (info rgb par pixel) dans un np.array
     Red_split = np.zeros([1, split**2])
@@ -25,31 +24,36 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
         Red = []
         Green = []
         Blue = []
-        for i in range(1, split+1):
-            for j in range(1, split+1):
+        for i in range(0, split):
+            for j in range(0, split):
                 if success:
-                    Red.append(np.sum(image[int((i-1)*vidWidth):int(i*vidWidth/split),int((i-1)*vidHeight):int(i*vidHeight/split),2])/(vidWidth*vidHeight/split**2))      # L'ordre d'OpenCV n'est pas RGB mais BGR
-                    Green.append(np.sum(image[int((i-1)*vidWidth):int(i*vidWidth/split),int((i-1)*vidHeight):int(i*vidHeight/split),1])/(vidWidth*vidHeight/split**2))
-                    Blue.append(np.sum(image[int((i-1)*vidWidth):int(i*vidWidth/split),int((i-1)*vidHeight):int(i*vidHeight/split),0])/(vidWidth*vidHeight/split**2))
-                    
+                    Red.append(np.sum(image[int(i*vidWidth/split):int((i+1)*vidWidth/split),
+                                            int(j*vidHeight/split):int((j+1)*vidHeight/split),2]
+                                      )/(vidWidth*vidHeight/split**2))      # L'ordre d'OpenCV n'est pas RGB mais BGR
+                    Green.append(np.sum(image[int(i*vidWidth/split):int((i+1)*vidWidth/split),
+                                              int(j*vidHeight/split):int((j+1)*vidHeight/split),1]
+                                        )/(vidWidth*vidHeight/split**2))
+                    Blue.append(np.sum(image[int(i*vidWidth/split):int((i+1)*vidWidth/split),
+                                             int(j*vidHeight/split):int((j+1)*vidHeight/split),0]
+                                       )/(vidWidth*vidHeight/split**2))
                 else :
                     break
-        print(Red)
-        if count == 0 :
-            Red_split[0] = Red
-            Green_split[0] = Green
-            Blue_split[0] = Blue
-        else :
-            np.append(Red_split, [Red], axis = 0)
-            np.append(Green_split, [Green], axis = 0)
-            np.append(Blue_split, [Blue], axis = 0)
+        #print(Red)
+        if len(Red) == split**2:
+            if count == 0 :
+                Red_split[0] = Red
+                Green_split[0] = Green
+                Blue_split[0] = Blue
+            else :
+                Red_split = np.append(Red_split, [Red], axis = 0)
+                Green_split = np.append(Green_split, [Green], axis = 0)
+                Blue_split = np.append(Blue_split, [Blue], axis = 0)
         count += 1
-    print("RED_SPLIT", len(Red_split))
     return Red_split, Green_split, Blue_split
 
 def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     # On stocke les images (info rgb par pixel) dans un np.array
-    Grey = []
+    Grey_split = np.zeros([1, split**2])
     
     success,image = vidObj.read()
     count = 0
@@ -57,19 +61,35 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     
     while count < limit :
         success,image = vidObj.read()
-        if success:
-            Grey.append(np.sum(image[:,:,0]/3 +
-                              image[:,:,1]/3 +
-                              image[:,:,2]/3)/(vidWidth*vidHeight))
-            count += 1
+        for i in range(0, split):
+            for j in range(0, split):
+                if success:
+                    Grey.append(np.sum(image[int(i*vidWidth/split):
+                                             int((i+1)*vidWidth/split),
+                                             int(j*vidHeight/split):
+                                             int((j+1)*vidHeight/split),0]/3 +
+                                       image[int(i*vidWidth/split):
+                                             int((i+1)*vidWidth/split),
+                                             int(j*vidHeight/split):
+                                             int((j+1)*vidHeight/split),1]/3 +
+                                           image[int(i*vidWidth/split):
+                                             int((i+1)*vidWidth/split),
+                                             int(j*vidHeight/split):
+                                             int((j+1)*vidHeight/split),2]/3)
+                                /(vidWidth*vidHeight/split**2))     
         else :
             break
+        count += 1
     return Grey
 
 def Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
     Noir = []
     # On répèrtorie les cut détectés par des grandes variations de chaque couleurs
-    RedCut = [] 
+    RedCut_split = []
+    GreenCut_split = []
+    BlueCut_split = []
+    
+    RedCut = []
     GreenCut = []
     BlueCut = []
     
@@ -167,7 +187,7 @@ def Analyse_greyscale(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
     
     return None
 
-##### Main #####
+#%% Main
 
 # Construit un objet VideoReader associé au fichier audio.
 
@@ -194,7 +214,7 @@ else:
     GreyScale = False
     displayEvo = True
     split = 2
-        
+
     if GreyScale :
         Grey = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
         if displayEvo :
@@ -212,15 +232,15 @@ else:
             Xrange = [x for x in range(0, min(limit, nb_frames-3))]
             for i in range(0, split):
                 for j in range(0, split):
-                    axs[i, j].plot(Xrange, Red_split[:,0], label = "Rouge", color = 'red')
-                    axs[i, j].plot(Xrange, Green, label = "Vert", color = 'green')
-                    axs[i, j].plot(Xrange, Blue, label = "Bleu", color = 'blue')
+                    axs[i, j].plot(Xrange, Red_split[:,i+j*2], label = "Rouge", color = 'red')
+                    axs[i, j].plot(Xrange, Green_split[:,i+j*2], label = "Vert", color = 'green')
+                    axs[i, j].plot(Xrange, Blue_split[:,i+j*2], label = "Bleu", color = 'blue')
                     # plt.plot(Xrange, np.ones(len(Blue))*7.8, '-.', label  = 'Seuil de détection des noirs', color = 'black')
-                    plt.xlabel("Images")
-                    plt.ylabel("Quantification de l'intensité des couleurs")
-                    plt.legend()
+                    # plt.xlabel("Images")
+                    # plt.ylabel("Quantification de l'intensité des couleurs")
+                    # plt.legend()
                     # plt.savefig('Evolution des niveaux de gris.png', dpi=300)
-    
+
     Nb_f_pos = []
     Nb_f_neg = []
     Nb_erreur = []
