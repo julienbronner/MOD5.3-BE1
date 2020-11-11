@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 
 def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
     # On stocke les images (info rgb par pixel) dans un np.array
-    Red_split = []
-    Green_split = []
-    Blue_split = []
+    Red_split = np.zeros([1, split**2])
+    Green_split = np.zeros([1, split**2])
+    Blue_split = np.zeros([1, split**2])
     success,image = vidObj.read()
     count = 0
     success = True
@@ -34,10 +34,15 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
                     
                 else :
                     break
-        print("RED :", len(Red))
-        Red_split.append(Red)
-        Green_split.append(Green)
-        Blue_split.append(Blue)
+        print(Red)
+        if count == 0 :
+            Red_split[0] = Red
+            Green_split[0] = Green
+            Blue_split[0] = Blue
+        else :
+            np.append(Red_split, [Red], axis = 0)
+            np.append(Green_split, [Green], axis = 0)
+            np.append(Blue_split, [Blue], axis = 0)
         count += 1
     print("RED_SPLIT", len(Red_split))
     return Red_split, Green_split, Blue_split
@@ -223,8 +228,8 @@ else:
     Nb_echa = 500
     Seuils = np.linspace(4, 15, Nb_echa)
     
-    cut = False
-    displayErr = True
+    cut = True
+    displayErr = False
     
     if cut :
         seuil_noir = 7.8
