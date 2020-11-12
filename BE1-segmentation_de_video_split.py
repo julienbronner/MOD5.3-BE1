@@ -9,7 +9,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-#%% Fonctions
+##### Fonctions #####
+#%%
 def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
     # On stocke les images (info rgb par pixel) dans un np.array
     Red_split = np.zeros([1, split**2])
@@ -49,7 +50,7 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
                 Blue_split = np.append(Blue_split, [Blue], axis = 0)
         count += 1
     return Red_split, Green_split, Blue_split
-
+#%%
 def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     # On stocke les images (info rgb par pixel) dans un np.array
     Grey_split = np.zeros([1, split**2])
@@ -86,7 +87,7 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
                 Grey_split = np.append(Grey_split, [Grey], axis = 0)
         count += 1
     return Grey_split
-
+#%%
 def Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
     Noir = []
     # On répèrtorie les cut détectés par des grandes variations de chaque couleurs
@@ -151,45 +152,49 @@ def Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
         Nb_erreur.append(nb_erreur)
     
     return None
-
-def Analyse_greyscale(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
-    Noir = []
-    Cut = []
+#%%
+def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut):
+    nb_f_pos =  [0 for i in range(split**2)]
+    nb_f_neg =  [0 for i in range(split**2)]
+    nb_erreur = [0 for i in range(split**2)]
     
-    for i in range(2,len(Grey)):
-        if np.abs(Grey[i]-Grey[i-1]) > seuil_cut:
-            if Grey[i] < seuil_noir :
-                Noir.append(i+1)
-                # print("Noir à la frame ", i+1)
+    for j in range(0,split**2):
+        Noir_split, Cut_split = [], []
+        for i in range(2,len(Grey_split[j])):
+            if np.abs(Grey_split[j,i]-Grey_split[j,i-1]) > seuil_cut:
+                if Grey_split[j,i] < seuil_noir :
+                    Noir_split.append(i+1)
+                    # print("Noir à la frame ", i+1)
+                else :
+                    Cut_split.append(i+1)
+                #print("Coupure à la frame ", i+1)
+
+        # On compare à présent les résultats à la vérité sur terrain
+        Noir_split = set(Noir_split)
+        Cut_split = set(Cut_split)
+        
+        
+        if len(Cut_split) == 0 :
+            print("Erreur : seuil trop grand")
+            return 0
+        else:
+            if cut == True:
+                nb_f_pos[j] = len(Cut_split.difference(Cut_verif))
+                nb_f_neg[j] = len(Cut_verif.difference(Cut_split))
+                #print("CUT :", Cut_split[j])
+                #print("NOIR :", Noir_split[j])
+    
             else :
-                Cut.append(i+1)
-                # print("Coupure à la frame ", i+1)
-
-    # On compare à présent les résultats à la vérité sur terrain
-    Noir = set(Noir)
-    Cut = set(Cut)
+                nb_f_pos[j] = len(Noir_split.difference(Noir_verif))
+                nb_f_neg[j] = len(Noir_verif.difference(Noir_split))
+                #print("CUT :", Cut_split[j])
+                #print("NOIR :", Noir_split[j])
+                
+            nb_erreur[j] = nb_f_pos[j] + nb_f_neg[j]
     
-    if len(Cut) == 0 :
-        print("Erreur : seuil trop grand")
-        return 0
-    else:
-        if cut == True:
-            nb_f_pos = len(Cut.difference(Cut_verif))
-            nb_f_neg = len(Cut_verif.difference(Cut))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
-
-        else :
-            nb_f_pos = len(Noir.difference(Noir_verif))
-            nb_f_neg = len(Noir_verif.difference(Noir))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
-            
-        nb_erreur = nb_f_pos + nb_f_neg
-        Nb_f_pos.append(nb_f_pos)
-        Nb_f_neg.append(nb_f_neg)
-        Nb_erreur.append(nb_erreur)
-    
+    Nb_f_pos_split = np.append(Nb_f_pos_split, [nb_f_pos], axis = 0)
+    Nb_f_neg_split = np.append(Nb_f_neg_split, [nb_f_neg], axis = 0)
+    Nb_erreur_split = np.append(Nb_erreur_split, [nb_erreur], axis = 0)
     return None
 
 #%% Main
@@ -217,8 +222,10 @@ else:
     Noir_verif = {42, 552, 812, 1573, 2007, 2766, 3277}
     
     GreyScale = True
-    displayEvo = True
+    displayEvo = False
+    displayErr = True
     split = 2
+    cut = True
 
     if GreyScale :
         Grey_split = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
@@ -249,24 +256,21 @@ else:
                     # plt.legend()
                     # plt.savefig('Evolution des niveaux de gris.png', dpi=300)
 
-    Nb_f_pos = []
-    Nb_f_neg = []
-    Nb_erreur = []
+    Nb_f_pos_split = np.zeros([0,split**2])
+    Nb_f_neg_split = np.zeros([0,split**2])
+    Nb_erreur_split = np.zeros([0,split**2])
     
     Nb_echa = 500
     Seuils = np.linspace(4, 15, Nb_echa)
-    
-    cut = True
-    displayErr = False
     
     if cut :
         seuil_noir = 7.8
         for seuil_cut in Seuils:
             # print("Seuil cut :", seuil_cut)
             if GreyScale :
-                Analyse_greyscale(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
+                Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             else :
-                Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
+                Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
     else :
         seuil_cut = 11.5
         for seuil_noir in Seuils:
@@ -277,22 +281,23 @@ else:
                 Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
             
     if displayErr :
-        nb_erreur_min = min(Nb_erreur)
-        indices = [i for i, err in enumerate(Nb_erreur) if err == nb_erreur_min]
-        print()
-        print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
-        print()
-        
-        # print(min(Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))]))
-        plt.plot(Seuils, Nb_f_pos, label="Nombre de faux positifs", color = 'blue')
-        plt.plot(Seuils, Nb_f_neg, label="Nombre de faux negatifs", color = 'red')
-        plt.plot(Seuils, Nb_erreur, '--', label="Nombre d'erreurs", color = 'black')
-        plt.xlabel("Seuil")
-        plt.ylabel("Nombre d'erreur")
-        plt.legend()
-        """
-        if cut :
-            plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_gris.png', dpi=300)
-        else :
-            plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_gris.png', dpi=300)
-        """
+        for i in range(0,split**2)
+            nb_erreur_min = min(Nb_erreur[i])
+            indices = [i for i, err in enumerate(Nb_erreur) if err == nb_erreur_min]
+            print()
+            print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
+            print()
+            
+            # print(min(Nb_f_pos_cut[Taux_echec_cut.index(min(Taux_echec_cut))] + Nb_f_neg_cut[Taux_echec_cut.index(min(Taux_echec_cut))]))
+            plt.plot(Seuils, Nb_f_pos, label="Nombre de faux positifs", color = 'blue')
+            plt.plot(Seuils, Nb_f_neg, label="Nombre de faux negatifs", color = 'red')
+            plt.plot(Seuils, Nb_erreur, '--', label="Nombre d'erreurs", color = 'black')
+            plt.xlabel("Seuil")
+            plt.ylabel("Nombre d'erreur")
+            plt.legend()
+            """
+            if cut :
+                plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_gris.png', dpi=300)
+            else :
+                plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_gris.png', dpi=300)
+            """
