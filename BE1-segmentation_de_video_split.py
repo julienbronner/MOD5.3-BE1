@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 #%%
 def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
     # On stocke les images (info rgb par pixel) dans un np.array
-    Red_split = np.zeros([1, split**2])
-    Green_split = np.zeros([1, split**2])
-    Blue_split = np.zeros([1, split**2])
+    Red_split = np.zeros([0, split**2])
+    Green_split = np.zeros([0, split**2])
+    Blue_split = np.zeros([0, split**2])
     success,image = vidObj.read()
     count = 0
     success = True
@@ -40,14 +40,9 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
                 else :
                     break
         if len(Red) == split**2:
-            if count == 0 :
-                Red_split[0] = Red
-                Green_split[0] = Green
-                Blue_split[0] = Blue
-            else :
-                Red_split = np.append(Red_split, [Red], axis = 0)
-                Green_split = np.append(Green_split, [Green], axis = 0)
-                Blue_split = np.append(Blue_split, [Blue], axis = 0)
+            Red_split = np.append(Red_split, [Red], axis = 0)
+            Green_split = np.append(Green_split, [Green], axis = 0)
+            Blue_split = np.append(Blue_split, [Blue], axis = 0)
         count += 1
     return Red_split, Green_split, Blue_split
 #%%
@@ -129,27 +124,28 @@ def Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
     # On compare à présent les résultats à la vérité sur terrain
     Noir = set(Noir)
     Cut = set(Cut)
-    
+    """
     if len(Cut) == 0 :
         print("Erreur : seuil trop grand")
         return 0
     else:
-        if cut == True:
-            nb_f_pos = len(Cut.difference(Cut_verif))
-            nb_f_neg = len(Cut_verif.difference(Cut))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
+    """
+    if cut == True:
+        nb_f_pos = len(Cut.difference(Cut_verif))
+        nb_f_neg = len(Cut_verif.difference(Cut))
+        print("CUT :", Cut)
+        print("NOIR :", Noir)
 
-        else :
-            nb_f_pos = len(Noir.difference(Noir_verif))
-            nb_f_neg = len(Noir_verif.difference(Noir))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
-            
-        nb_erreur = nb_f_pos + nb_f_neg
-        Nb_f_pos.append(nb_f_pos)
-        Nb_f_neg.append(nb_f_neg)
-        Nb_erreur.append(nb_erreur)
+    else :
+        nb_f_pos = len(Noir.difference(Noir_verif))
+        nb_f_neg = len(Noir_verif.difference(Noir))
+        print("CUT :", Cut)
+        print("NOIR :", Noir)
+        
+    nb_erreur = nb_f_pos + nb_f_neg
+    Nb_f_pos.append(nb_f_pos)
+    Nb_f_neg.append(nb_f_neg)
+    Nb_erreur.append(nb_erreur)
     
     return None
 #%%
@@ -172,26 +168,27 @@ def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut
         # On compare à présent les résultats à la vérité sur terrain
         Noir_split = set(Noir_split)
         Cut_split = set(Cut_split)
-        print('Cut :', Cut_split)
-        print('Noir :', Noir_split)
-        
+        #print('Cut :', Cut_split)
+        #print('Noir :', Noir_split)
+        """
         if len(Cut_split) == 0 :
             print("Erreur : seuil trop grand")
             return 0
         else:
-            if cut == True:
-                nb_f_pos[j] = len(Cut_split.difference(Cut_verif))
-                nb_f_neg[j] = len(Cut_verif.difference(Cut_split))
-                #print("CUT :", Cut_split[j])
-                #print("NOIR :", Noir_split[j])
-    
-            else :
-                nb_f_pos[j] = len(Noir_split.difference(Noir_verif))
-                nb_f_neg[j] = len(Noir_verif.difference(Noir_split))
-                #print("CUT :", Cut_split[j])
-                #print("NOIR :", Noir_split[j])
-                
-            nb_erreur[j] = nb_f_pos[j] + nb_f_neg[j]
+        """
+        if cut == True:
+            nb_f_pos[j] = len(Cut_split.difference(Cut_verif))
+            nb_f_neg[j] = len(Cut_verif.difference(Cut_split))
+            #print("CUT :", Cut_split[j])
+            #print("NOIR :", Noir_split[j])
+
+        else :
+            nb_f_pos[j] = len(Noir_split.difference(Noir_verif))
+            nb_f_neg[j] = len(Noir_verif.difference(Noir_split))
+            #print("CUT :", Cut_split[j])
+            #print("NOIR :", Noir_split[j])
+            
+        nb_erreur[j] = nb_f_pos[j] + nb_f_neg[j]
             
     Nb_f_pos_split = np.append(Nb_f_pos_split, [nb_f_pos], axis = 0)
     Nb_f_neg_split = np.append(Nb_f_neg_split, [nb_f_neg], axis = 0)
@@ -224,7 +221,7 @@ else:
     
     GreyScale = True
     displayEvo = False
-    split = 3
+    split = 4
     cut = True
 
     if GreyScale :
@@ -257,10 +254,10 @@ else:
     Nb_erreur_split = np.zeros([0,split**2])
     
     Nb_echa = 100
-    Seuils = np.linspace(5, 50, Nb_echa)
+    Seuils = np.linspace(10, 45, Nb_echa)
     
     if cut :
-        seuil_noir = 7.8
+        seuil_noir = 6
         for seuil_cut in Seuils:
             # print("Seuil cut :", seuil_cut)
             if GreyScale :
@@ -268,13 +265,13 @@ else:
             else :
                 Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
     else :
-        seuil_cut = 11.5
+        seuil_cut = 18
         for seuil_noir in Seuils:
             # print("Seuil noir :", seuil_noir)
             if GreyScale :
-                Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             else :
-                Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             
     if not displayEvo : # Si on veut afficher les erreurs en fonction du seuil
         fig, axs = plt.subplots(split, split)
@@ -283,11 +280,10 @@ else:
                 axs[i, j].plot(Seuils, Nb_f_pos_split[:, i+j*2], label="Nombre de faux positifs", color = 'blue')
                 axs[i, j].plot(Seuils, Nb_f_neg_split[:, i+j*2], label="Nombre de faux negatifs", color = 'red')
                 axs[i, j].plot(Seuils, Nb_erreur_split[:, i+j*2], '--', label="Nombre d'erreurs", color = 'black')
-                nb_erreur_min = min(Nb_erreur_split[i+j*2])
-                indices = [i for i, err in enumerate(Nb_erreur_split[i+j*2]) if err == nb_erreur_min]
+                nb_erreur_min = min(Nb_erreur_split[:, i+j*2])
+                indices = [k for k, err in enumerate(Nb_erreur_split[:, i+j*2]) if err == nb_erreur_min]
                 print()
                 print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
-                print()
             """
             if cut :
                 plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_gris.png', dpi=300)
