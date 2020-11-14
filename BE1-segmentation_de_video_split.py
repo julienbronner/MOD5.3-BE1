@@ -122,8 +122,8 @@ def Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, s
         if cut == True:
             nb_f_pos[j] = len(Cut_split.difference(Cut_verif))
             nb_f_neg[j] = len(Cut_verif.difference(Cut_split))
-            print("CUT :", Cut_split[j])
-            print("NOIR :", Noir_split[j])
+            #print("CUT :", Cut_split)
+            #print("NOIR :", Noir_split)
 
         else :
             nb_f_pos[j] = len(Noir_split.difference(Noir_verif))
@@ -158,9 +158,9 @@ def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut
         # On compare à présent les résultats à la vérité sur terrain
         Noir_split = set(Noir_split)
         Cut_split = set(Cut_split)
-        print()
-        print('Cut :', sorted(Cut_split))
-        print('Noir :', sorted(Noir_split))
+        #print()
+        #print('Cut :', sorted(Cut_split))
+        #print('Noir :', sorted(Noir_split))
         """
         if len(Cut_split) == 0 :
             print("Erreur : seuil trop grand")
@@ -211,8 +211,8 @@ else:
     Noir_verif = {42, 552, 812, 1573, 2007, 2766, 3277}
     
     GreyScale = False
-    displayEvo = False
-    split = 3
+    displayEvo = True 
+    split = 5
     cut = True
 
     if GreyScale :
@@ -227,7 +227,7 @@ else:
             # plt.xlabel("Images")
             # plt.ylabel("Quantification de l'intensité des gris")
             # plt.legend()
-            # plt.savefig('Evolution des niveaux de gris.png', dpi=300)
+                    plt.savefig('Evolution des niveaux de gris - split ' + str(split)+ '.png', dpi=300)
     else :
         Red_split, Green_split, Blue_split = Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split)
         if displayEvo :
@@ -238,7 +238,7 @@ else:
                     axs[i, j].plot(Xrange, Red_split[:,i+j*2], label = "Rouge", color = 'red')
                     axs[i, j].plot(Xrange, Green_split[:,i+j*2], label = "Vert", color = 'green')
                     axs[i, j].plot(Xrange, Blue_split[:,i+j*2], label = "Bleu", color = 'blue')
-                    # plt.savefig('Evolution des niveaux de gris.png', dpi=300)
+                    plt.savefig('Evolution des couleurs - split ' + str(split)+ '.png', dpi=300)
                     
 #%% Détection des erreurs
 
