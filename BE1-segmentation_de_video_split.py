@@ -25,8 +25,8 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
         Red = []
         Green = []
         Blue = []
-        for i in range(0, split):
-            for j in range(0, split):
+        for i in range(split):
+            for j in range(split):
                 if success:
                     Red.append(np.sum(image[int(i*vidWidth/split):int((i+1)*vidWidth/split),
                                             int(j*vidHeight/split):int((j+1)*vidHeight/split),2]
@@ -48,7 +48,7 @@ def Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split = 1):
 #%%
 def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     # On stocke les images (info rgb par pixel) dans un np.array
-    Grey_split = np.zeros([1, split**2])
+    Grey_split = np.zeros([0, split**2])
     
     success,image = vidObj.read()
     count = 0
@@ -57,8 +57,8 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
     while count < limit :
         success,image = vidObj.read()
         Grey = []
-        for i in range(0, split):
-            for j in range(0, split):
+        for i in range(split):
+            for j in range(split):
                 if success:
                     Grey.append(np.sum(image[int(i*vidWidth/split):
                                              int((i+1)*vidWidth/split),
@@ -76,10 +76,7 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
                 else :
                     break
         if len(Grey) == split**2:
-            if count == 0 :
-                Grey_split[0] = Grey
-            else :
-                Grey_split = np.append(Grey_split, [Grey], axis = 0)
+            Grey_split = np.append(Grey_split, [Grey], axis = 0)
         count += 1
     return Grey_split
 #%%
@@ -89,7 +86,9 @@ def Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, s
     nb_f_neg =  [0 for i in range(split**2)]
     nb_erreur = [0 for i in range(split**2)]
     
-    for j in range(0,split**2):
+    cross_cut, cross_noir = [], []
+    
+    for j in range(split**2):
         Noir_split, Cut_split, RedCut_split, GreenCut_split, BlueCut_split = [], [], [], [], []
         for i in range(2,len(Red_split[:,j])):
             if np.abs(Red_split[i,j]-Red_split[i-1,j]) > seuil_cut:
@@ -110,9 +109,11 @@ def Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, s
                 
                 # print("Coupure à la frame ", i+1)
                 # print("Red : ",Red[i], "; Green : ", Green[i], "; Blue : ", Blue[i])
-                    
+
+        cross_cut.append(Cut_split)
+        cross_noir.append(Noir_split)
+                            
         # On compare à présent les résultats à la vérité sur terrain
-        
         Noir_split = set(Noir_split)
         Cut_split = set(Cut_split)
         #print()
@@ -136,7 +137,7 @@ def Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, s
     Nb_f_pos_split = np.append(Nb_f_pos_split, [nb_f_pos], axis = 0)
     Nb_f_neg_split = np.append(Nb_f_neg_split, [nb_f_neg], axis = 0)
     Nb_erreur_split = np.append(Nb_erreur_split, [nb_erreur], axis = 0)
-    return Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split
+    return Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir
 
 #%%
 def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut):
@@ -144,7 +145,9 @@ def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut
     nb_f_neg =  [0 for i in range(split**2)]
     nb_erreur = [0 for i in range(split**2)]
     
-    for j in range(0,split**2):
+    cross_cut, cross_noir = [], []
+    
+    for j in range(split**2):
         Noir_split, Cut_split = [], []
         for i in range(2,len(Grey_split[:,j])):
             if np.abs(Grey_split[i,j]-Grey_split[i-1,j]) > seuil_cut:
@@ -155,7 +158,10 @@ def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut
                     Cut_split.append(i+1)
                     #print("Coupure à la frame ", i+1)
 
-        # On compare à présent les résultats à la vérité sur terrain
+        cross_cut.append(Cut_split)
+        cross_noir.append(Noir_split)
+
+        # On compare à présent les résultats à la vérité sur terrain        
         Noir_split = set(Noir_split)
         Cut_split = set(Cut_split)
         #print()
@@ -184,7 +190,7 @@ def Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut
     Nb_f_pos_split = np.append(Nb_f_pos_split, [nb_f_pos], axis = 0)
     Nb_f_neg_split = np.append(Nb_f_neg_split, [nb_f_neg], axis = 0)
     Nb_erreur_split = np.append(Nb_erreur_split, [nb_erreur], axis = 0)
-    return Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split
+    return Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir
 
 #%% Main
 
@@ -214,14 +220,15 @@ else:
     displayEvo = False 
     split = 2
     cut = True
+    cross = True
     
     if GreyScale :
         Grey_split = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
         if displayEvo :
             fig, axs = plt.subplots(split, split)
-            Xrange = [x for x in range(0, min(limit, nb_frames-3))]
-            for i in range(0, split):
-                for j in range(0, split):
+            Xrange = [x for x in range(min(limit, nb_frames-3))]
+            for i in range(split):
+                for j in range(split):
                     axs[i, j].plot(Xrange, Grey_split[:,i+j*2], label = "Niveaux de gris", color = 'grey')
             # plt.plot(Xrange, np.ones(len(Grey))*7.8, '-.', label  = 'Seuil de détection des noirs', color = 'black')
             # plt.xlabel("Images")
@@ -232,9 +239,9 @@ else:
         Red_split, Green_split, Blue_split = Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split)
         if displayEvo :
             fig, axs = plt.subplots(split, split)
-            Xrange = [x for x in range(0, min(limit, nb_frames-3))]
-            for i in range(0, split):
-                for j in range(0, split):
+            Xrange = [x for x in range(min(limit, nb_frames-3))]
+            for i in range(split):
+                for j in range(split):
                     axs[i, j].plot(Xrange, Red_split[:,i+j*2], label = "Rouge", color = 'red')
                     axs[i, j].plot(Xrange, Green_split[:,i+j*2], label = "Vert", color = 'green')
                     axs[i, j].plot(Xrange, Blue_split[:,i+j*2], label = "Bleu", color = 'blue')
@@ -247,45 +254,63 @@ else:
     Nb_erreur_split = np.zeros([0,split**2])
     
     Nb_echa = 200
-    Seuils = np.linspace(5, 50, Nb_echa)
+    Seuils = np.linspace(5, 30, Nb_echa)
     
     if cut :
         seuil_noir = 6
         for seuil_cut in Seuils:
             # print("Seuil cut :", seuil_cut)
             if GreyScale :
-                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir = Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             else :
-                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
     else :
-        seuil_cut = 15
+        seuil_cut = 5
         for seuil_noir in Seuils:
             # print("Seuil noir :", seuil_noir)
             if GreyScale :
-                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir = Analyse_greyscale(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             else :
-                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
+                Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, cross_cut, cross_noir = Analyse_colour(Nb_f_pos_split, Nb_f_neg_split, Nb_erreur_split, seuil_cut, seuil_noir, cut)
             
     if not displayEvo : # Si on veut afficher les erreurs en fonction du seuil
-        fig, axs = plt.subplots(split, split)
-        for i in range(0, split):
-            for j in range(0, split):
-                axs[i, j].plot(Seuils, Nb_f_pos_split[:, i+j*2], label="Nombre de faux positifs", color = 'blue')
-                axs[i, j].plot(Seuils, Nb_f_neg_split[:, i+j*2], label="Nombre de faux negatifs", color = 'red')
-                axs[i, j].plot(Seuils, Nb_erreur_split[:, i+j*2], '--', label="Nombre d'erreurs", color = 'black')
-                nb_erreur_min = min(Nb_erreur_split[:, i+j*2])
-                indices = [k for k, err in enumerate(Nb_erreur_split[:, i+j*2]) if err == nb_erreur_min]
-                print()
-                print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
-            
-            if GreyScale :
-                if cut :
-                    plt.savefig('Erreurs en fonction du seuil de détection - Cut - Grey - Split ' + str(split)+ '.png', dpi=300)
+        if not cross : # Si on ne veut pas croiser les résultats des régions
+            fig, axs = plt.subplots(split, split)
+            for i in range(split):
+                for j in range(split):
+                    axs[i, j].plot(Seuils, Nb_f_pos_split[:, i+j*2], label="Nombre de faux positifs", color = 'blue')
+                    axs[i, j].plot(Seuils, Nb_f_neg_split[:, i+j*2], label="Nombre de faux negatifs", color = 'red')
+                    axs[i, j].plot(Seuils, Nb_erreur_split[:, i+j*2], '--', label="Nombre d'erreurs", color = 'black')
+                    nb_erreur_min = min(Nb_erreur_split[:, i+j*2])
+                    indices = [k for k, err in enumerate(Nb_erreur_split[:, i+j*2]) if err == nb_erreur_min]
+                    print()
+                    print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
+                
+                if GreyScale :
+                    if cut :
+                        plt.savefig('Erreurs en fonction du seuil de détection - Cut - Grey - Split ' + str(split)+ '.png', dpi=300)
+                    else :
+                        plt.savefig('Erreurs en fonction du seuil de détection - Noir - Grey - Split ' + str(split)+ '.png', dpi=300)
                 else :
-                    plt.savefig('Erreurs en fonction du seuil de détection - Noir - Grey - Split ' + str(split)+ '.png', dpi=300)
-            else :
-                if cut :
-                    plt.savefig('Erreurs en fonction du seuil de détection - Cut - RGB - Split ' + str(split)+ '.png', dpi=300)
-                else :
-                    plt.savefig('Erreurs en fonction du seuil de détection - Noir - RGB - Split ' + str(split)+ '.png', dpi=300)
-            
+                    if cut :
+                        plt.savefig('Erreurs en fonction du seuil de détection - Cut - RGB - Split ' + str(split)+ '.png', dpi=300)
+                    else :
+                        plt.savefig('Erreurs en fonction du seuil de détection - Noir - RGB - Split ' + str(split)+ '.png', dpi=300)
+        else :
+            Cross = np.zeros([0,split**2+1])
+            for i in cross_cut :
+                for j in i :
+                    if j not in Cross :
+                        Cross = np.append(Cross, [[0 for k in range(split**2+1)]], axis = 0)
+                        Cross[-1][0] = j
+                    Cross[np.where(Cross == j)[0][0], cross_cut.index(i)+1] = 1
+            #print(Cross)
+            Cross_sum = []
+            for i in Cross :
+                if i[1:5].sum() > 2 :
+                    Cross_sum.append(int(i[0]))
+            #print(Cross_sum)
+            Cross_sum = set(Cross_sum)
+            nb_f_pos = len(Cross_sum.difference(Cut_verif))
+            nb_f_neg = len(Cut_verif.difference(Cross_sum))
+            print(nb_f_neg, nb_f_pos)
