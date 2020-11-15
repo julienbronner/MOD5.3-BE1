@@ -211,10 +211,10 @@ else:
     Noir_verif = {42, 552, 812, 1573, 2007, 2766, 3277}
     
     GreyScale = False
-    displayEvo = True 
-    split = 5
+    displayEvo = False 
+    split = 2
     cut = True
-
+    
     if GreyScale :
         Grey_split = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
         if displayEvo :
@@ -277,9 +277,15 @@ else:
                 indices = [k for k, err in enumerate(Nb_erreur_split[:, i+j*2]) if err == nb_erreur_min]
                 print()
                 print("Nb d'erreurs :", nb_erreur_min, "; pour un seuil de", Seuils[indices])
-            """
-            if cut :
-                plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_gris.png', dpi=300)
+            
+            if GreyScale :
+                if cut :
+                    plt.savefig('Erreurs en fonction du seuil de détection - Cut - Grey - Split ' + str(split)+ '.png', dpi=300)
+                else :
+                    plt.savefig('Erreurs en fonction du seuil de détection - Noir - Grey - Split ' + str(split)+ '.png', dpi=300)
             else :
-                plt.savefig('Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_gris.png', dpi=300)
-            """
+                if cut :
+                    plt.savefig('Erreurs en fonction du seuil de détection - Cut - RGB - Split ' + str(split)+ '.png', dpi=300)
+                else :
+                    plt.savefig('Erreurs en fonction du seuil de détection - Noir - RGB - Split ' + str(split)+ '.png', dpi=300)
+            
