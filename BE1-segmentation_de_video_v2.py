@@ -96,14 +96,14 @@ def Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut):
         if cut == True:
             nb_f_pos = len(Cut.difference(Cut_verif))
             nb_f_neg = len(Cut_verif.difference(Cut))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
+            #print("CUT :", Cut)
+            #print("NOIR :", Noir)
 
         else :
             nb_f_pos = len(Noir.difference(Noir_verif))
             nb_f_neg = len(Noir_verif.difference(Noir))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
+            #print("CUT :", Cut)
+            #print("NOIR :", Noir)
             
         nb_erreur = nb_f_pos + nb_f_neg
         Nb_f_pos.append(nb_f_pos)
@@ -136,14 +136,14 @@ def Analyse_greyscale(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
         if cut == True:
             nb_f_pos = len(Cut.difference(Cut_verif))
             nb_f_neg = len(Cut_verif.difference(Cut))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
+            #print("CUT :", Cut)
+            #print("NOIR :", Noir)
 
         else :
             nb_f_pos = len(Noir.difference(Noir_verif))
             nb_f_neg = len(Noir_verif.difference(Noir))
-            print("CUT :", Cut)
-            print("NOIR :", Noir)
+            #print("CUT :", Cut)
+            #print("NOIR :", Noir)
             
         nb_erreur = nb_f_pos + nb_f_neg
         Nb_f_pos.append(nb_f_pos)
@@ -188,7 +188,7 @@ else:
             plt.xlabel("Images")
             plt.ylabel("Quantification de l'intensité des gris")
             plt.legend()
-            # plt.savefig('Visualisation du seuil de détection des noirs.png', dpi=300)
+            plt.savefig('Evolution des niveaux des gris.png', dpi=300)
     else :
         Red, Green, Blue = Get_Image_colour(vidObj, limit, vidWidth, vidHeight)
         if displayEvo :
@@ -207,10 +207,14 @@ else:
     Nb_erreur = []
     
     Nb_echa = 500
-    Seuils = np.linspace(4, 15, Nb_echa)
+    Seuils = np.linspace(4, 20, Nb_echa)
     
     cut = True
-    displayErr = True
+    
+    # Seuil noir pour niveau de gris : 3.9
+    # Seuil noir pour RGB : 7.8
+    # Seuil cut pour niveau de gris : 12.4
+    # Seuil cut pour RGB : 11
     
     if cut :
         seuil_noir = 7.8
@@ -221,7 +225,7 @@ else:
             else :
                 Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
     else :
-        seuil_cut = 11.5
+        seuil_cut = 11
         for seuil_noir in Seuils:
             # print("Seuil noir :", seuil_noir)
             if GreyScale :
@@ -229,7 +233,7 @@ else:
             else :
                 Analyse_colour(Nb_f_pos, Nb_f_neg, Nb_erreur, seuil_cut, seuil_noir, cut)
             
-    if displayErr :
+    if not displayEvo :
         nb_erreur_min = min(Nb_erreur)
         indices = [i for i, err in enumerate(Nb_erreur) if err == nb_erreur_min]
         print()
