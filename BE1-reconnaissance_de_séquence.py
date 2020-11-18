@@ -134,18 +134,25 @@ def Get_sequences(seuil_noir):
             seq = []     
     return Sequences
 #%%
-def Get_max_lum(sequence):
+def Get_imagettes(sequence):
+    imagettes_id = []
+    plan = []
+    Gr = np.array(Grey)[sequence] # On extrait la partie de la vidéo qui nous intéresse
     for i in sequence :
-        G = np.array(Grey)
-        G = G[sequence]
-        max_lum = np.argsort(G)[-1]
-    frame = np.where(Grey == G[max_lum])[0][0]
-    print('Maximum de luminosité de ', G[max_lum], ' à la frame', frame)
-    sift = cv2.SIFT_create()
-    kp = sift.detect(Grey[frame],None)
-    img=cv2.drawKeypoints(Grey[frame],kp,img)
-    cv2.imwrite('sift_keypoints.jpg',img)
-    return max_lum, G[max_lum]
+        if i in Cut_verif:
+            mean_plan = sum(plan)/len(plan)
+            reduce_plan = [a_i - b_i for a_i, b_i in zip(plan, [mean_plan for x in range(len(plan))])]
+            #print(reduce_plan)
+            min_ind = np.argsort(np.array(reduce_plan))[0]
+            imagettes_id.append(min_ind+i)
+            plan = []
+        else :
+            plan.append(Grey[i])
+    #print(Gr)
+    print(imagettes_id)
+    imagettes = np.where(Grey == Gr[imagettes_id])[0][0]
+    print('Imagettes ', imagettes, ' aux frames', imagettes_id)
+    return imagettes, imagettes_id
         
 #%%
 
@@ -223,13 +230,23 @@ else:
 #%% Découpage des séquences
     #Grey = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
     seuil_noir = 3.9
+    seuil_cut = 12.4
+    Cut_verif = {52, 142, 163, 187, 200, 221, 248, 256, 268, 307, 485, 526, 561, 
+                 582, 595, 615, 635, 664, 690, 705, 720, 746, 821, 853, 903, 956, 
+                 975, 998, 1027, 1062, 1099, 1120, 1144, 1177, 1220, 1255, 1293, 
+                 1335, 1367, 1444, 1582, 1655, 1735, 1812, 1871, 1895, 1909, 1960, 
+                 2016, 2106, 2147, 2184, 2243, 2487, 2526, 2617, 2688, 2775, 2808, 
+                 2829, 2858, 2881, 2917, 2934, 2962, 2978, 3011, 3086, 3179}
     Sequences = Get_sequences(seuil_noir)
     Sequences = np.delete(Sequences, 0, 0)
-    for i in Sequences :
-        print(i[0], i[-1])
+    #for i in Sequences :
+    #    print(i[0], i[-1])
     for seq in Sequences :
-        Get_max_lum(seq)
-
+        Get_imagettes(seq)
+    # Seuil noir pour niveau de gris : 3.9
+    # Seuil noir pour RGB : 7.8
+    # Seuil cut pour niveau de gris : 12.4
+    # Seuil cut pour RGB : 11
 #%% Choix des images
 
     
