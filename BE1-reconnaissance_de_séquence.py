@@ -6,6 +6,7 @@ Created on Sat Oct 31 12:07:34 2020
 """
 
 import cv2
+import pysift
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -120,10 +121,35 @@ def Get_Image_greyscale_split(vidObj, limit, vidWidth, vidHeight):
         count += 1
     return Grey_split
 #%%
-
+def Get_sequences(seuil_noir):
+    Sequences = []
+    # On répèrtorie les cut détectés par des grandes variations de chaque couleurs
+    seq = []
+    for i in range(len(Grey)) :
+        if Grey[i] > seuil_noir :
+            seq.append(i)
+        else :
+            if len(seq) > 1 :
+                Sequences.append(seq)
+            seq = []     
+    return Sequences
+#%%
+def Get_max_lum(sequence):
+    for i in sequence :
+        G = np.array(Grey)
+        G = G[sequence]
+        max_lum = np.argsort(G)[-1]
+    frame = np.where(Grey == G[max_lum])[0][0]
+    print('Maximum de luminosité de ', G[max_lum], ' à la frame', frame)
+    sift = cv2.SIFT_create()
+    kp = sift.detect(Grey[frame],None)
+    img=cv2.drawKeypoints(Grey[frame],kp,img)
+    cv2.imwrite('sift_keypoints.jpg',img)
+    return max_lum, G[max_lum]
+        
 #%%
 
-#%% Main
+#%% Lecture de la vidéo
 
 # Construit un objet VideoReader associé au fichier audio.
 
@@ -143,14 +169,11 @@ else:
 
     # Petit échantillon pour les tests
     limit = nb_frames
-    # Set des coupures  et noirs réels, afin de comparer nos résultats
-    Cut_verif = {52, 142, 163, 187, 200, 221, 248, 256, 268, 307, 485, 526, 561, 582, 595, 615, 635, 664, 690, 705, 720, 746, 821, 853, 903, 956, 975, 998, 1027, 1062, 1099, 1120, 1144, 1177, 1220, 1255, 1293, 1335, 1367, 1444, 1582, 1655, 1735, 1812, 1871, 1895, 1909, 1960, 2016, 2106, 2147, 2184, 2243, 2487, 2526, 2617, 2688, 2775, 2808, 2829, 2858, 2881, 2917, 2934, 2962, 2978, 3011, 3086, 3179}
-    Noir_verif = {42, 552, 812, 1573, 2007, 2766, 3277}
     
-    Sequences = [[0,42], []]
+#%% Quantification des couleurs et affichage potentiel
     
     GreyScale = True
-    displayEvo = True
+    displayEvo = False
     Split = False
     split = 3
     
@@ -196,7 +219,17 @@ else:
                 plt.ylabel("Quantification de l'intensité des couleurs")
                 plt.legend()
                 # plt.savefig('Visualisation du seuil de détection des noirs.png', dpi=300)
-
                     
-#%% Détection des erreurs
-          
+#%% Découpage des séquences
+    #Grey = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
+    seuil_noir = 3.9
+    Sequences = Get_sequences(seuil_noir)
+    Sequences = np.delete(Sequences, 0, 0)
+    for i in Sequences :
+        print(i[0], i[-1])
+    for seq in Sequences :
+        Get_max_lum(seq)
+
+#%% Choix des images
+
+    
