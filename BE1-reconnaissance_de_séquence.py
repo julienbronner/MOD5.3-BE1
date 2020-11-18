@@ -51,7 +51,7 @@ def Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight):
             break
     return Grey
 #%%
-def Get_Image_colour_split(vidObj, limit, vidWidth, vidHeight, split = 1):
+def Get_Image_colour_split(vidObj, limit, vidWidth, vidHeight):
     # On stocke les images (info rgb par pixel) dans un np.array
     Red_split = np.zeros([0, split**2])
     Green_split = np.zeros([0, split**2])
@@ -147,34 +147,56 @@ else:
     Cut_verif = {52, 142, 163, 187, 200, 221, 248, 256, 268, 307, 485, 526, 561, 582, 595, 615, 635, 664, 690, 705, 720, 746, 821, 853, 903, 956, 975, 998, 1027, 1062, 1099, 1120, 1144, 1177, 1220, 1255, 1293, 1335, 1367, 1444, 1582, 1655, 1735, 1812, 1871, 1895, 1909, 1960, 2016, 2106, 2147, 2184, 2243, 2487, 2526, 2617, 2688, 2775, 2808, 2829, 2858, 2881, 2917, 2934, 2962, 2978, 3011, 3086, 3179}
     Noir_verif = {42, 552, 812, 1573, 2007, 2766, 3277}
     
-    GreyScale = False
-    displayEvo = True 
-    split = 2
+    Sequences = [[0,42], []]
     
-    if GreyScale :
-        Grey_split = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
-        if displayEvo :
-            fig, axs = plt.subplots(split, split)
-            Xrange = [x for x in range(min(limit, nb_frames-3))]
-            for i in range(split):
-                for j in range(split):
-                    axs[i, j].plot(Xrange, Grey_split[:,i+j*2], label = "Niveaux de gris", color = 'grey')
-            # plt.plot(Xrange, np.ones(len(Grey))*7.8, '-.', label  = 'Seuil de détection des noirs', color = 'black')
-            # plt.xlabel("Images")
-            # plt.ylabel("Quantification de l'intensité des gris")
-            # plt.legend()
-                    plt.savefig('Evolution des niveaux de gris - split ' + str(split)+ '.png', dpi=300)
+    GreyScale = True
+    displayEvo = True
+    Split = False
+    split = 3
+    
+    if Split :
+        if GreyScale :
+            Grey_split = Get_Image_greyscale_split(vidObj, limit, vidWidth, vidHeight)
+            if displayEvo :
+                fig, axs = plt.subplots(split, split)
+                Xrange = [x for x in range(min(limit, nb_frames-3))]
+                for i in range(split):
+                    for j in range(split):
+                        axs[i, j].plot(Xrange, Grey_split[:,i+j*2], label = "Niveaux de gris", color = 'grey')
+                        #plt.savefig('Evolution des niveaux de gris - split ' + str(split)+ '.png', dpi=300)
+        else :
+            Red_split, Green_split, Blue_split = Get_Image_colour_split(vidObj, limit, vidWidth, vidHeight)
+            if displayEvo :
+                fig, axs = plt.subplots(split, split)
+                Xrange = [x for x in range(min(limit, nb_frames-3))]
+                for i in range(split):
+                    for j in range(split):
+                        axs[i, j].plot(Xrange, Red_split[:,i+j*2], label = "Rouge", color = 'red')
+                        axs[i, j].plot(Xrange, Green_split[:,i+j*2], label = "Vert", color = 'green')
+                        axs[i, j].plot(Xrange, Blue_split[:,i+j*2], label = "Bleu", color = 'blue')
+                        #plt.savefig('Evolution des couleurs - split ' + str(split)+ '.png', dpi=300)
     else :
-        Red_split, Green_split, Blue_split = Get_Image_colour(vidObj, limit, vidWidth, vidHeight, split)
-        if displayEvo :
-            fig, axs = plt.subplots(split, split)
-            Xrange = [x for x in range(min(limit, nb_frames-3))]
-            for i in range(split):
-                for j in range(split):
-                    axs[i, j].plot(Xrange, Red_split[:,i+j*2], label = "Rouge", color = 'red')
-                    axs[i, j].plot(Xrange, Green_split[:,i+j*2], label = "Vert", color = 'green')
-                    axs[i, j].plot(Xrange, Blue_split[:,i+j*2], label = "Bleu", color = 'blue')
-                    plt.savefig('Evolution des couleurs - split ' + str(split)+ '.png', dpi=300)
+        if GreyScale :
+            Grey = Get_Image_greyscale(vidObj, limit, vidWidth, vidHeight)
+            if displayEvo :
+                Xrange = [x for x in range(min(limit, nb_frames-3))]
+                plt.plot(Xrange, Grey, label = "Niveaux de gris", color = 'grey')
+                plt.xlabel("Images")
+                plt.ylabel("Quantification de l'intensité des couleurs")
+                plt.legend()
+                # plt.savefig('Visualisation du seuil de détection des noirs.png', dpi=300)
+        else :
+            Red, Green, Blue = Get_Image_colour(vidObj, limit, vidWidth, vidHeight)
+            if displayEvo :
+                Xrange = [x for x in range(min(limit, nb_frames-3))]
+                plt.plot(Xrange, Red, label = "Rouge", color = 'red')
+                plt.plot(Xrange, Green, label = "Vert", color = 'green')
+                plt.plot(Xrange, Blue, label = "Bleu", color = 'blue')
+                plt.xlabel("Images")
+                plt.ylabel("Quantification de l'intensité des couleurs")
+                plt.legend()
+                # plt.savefig('Visualisation du seuil de détection des noirs.png', dpi=300)
+
                     
 #%% Détection des erreurs
           
