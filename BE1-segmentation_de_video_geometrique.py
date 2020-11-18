@@ -56,8 +56,12 @@ def filtrage_geo_video_v2(video_greyscale, masque_filtrage, seuil_bord, seuil_co
     pad_filtrage = (np.shape(masque_filtrage)[0] - 1) // 2
     matrice_unite = np.ones((5,5))
     pad_unite = (np.shape(matrice_unite)[0] - 1) // 2
-    print(np.shape(masque_filtrage))
+    #print(np.shape(masque_filtrage))
     liste_coupure = []
+    liste_coupure_verite = [52,142,163,187,200,221,248,256,268,307,485,526]
+    
+    #out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), nb_frames, (Width,Height), False)
+    
     for frame in range(nb_frames):
         # Partie detection de bord
         frame_greyscale = video_greyscale[frame]
@@ -82,6 +86,10 @@ def filtrage_geo_video_v2(video_greyscale, masque_filtrage, seuil_bord, seuil_co
                     frame_bord[i, j] = 0
         video_bord[frame] = frame_bord[pad_unite:-pad_unite, pad_unite:-pad_unite]
         
+        #out.write(video_bord[frame])
+        #cv2.imshow('frame',video_bord[frame])
+
+
         # Partie comparaison bord avec l'image précédente
         if frame >0: # on evite la première frame parce qu'on ne peut la comparer a rien
             nombre_pixel_bord_commun = 0
@@ -90,11 +98,12 @@ def filtrage_geo_video_v2(video_greyscale, masque_filtrage, seuil_bord, seuil_co
                     if ((video_bord[frame,i,j]==255) and (video_bord[frame-1,i,j]==255)):
                         nombre_pixel_bord_commun+=1
 #            nombre_pixel_bord_commun = sum(sum(video_bord[frame]==video_bord[frame-1]))
-            if frame%100 == 0 :
-                print(nombre_pixel_bord_commun)
-            nombre_pixel_bord_commun = sum(sum(video_bord[frame]==video_bord[frame-1]))
             fraction_commune = 100*nombre_pixel_bord_commun/(Height*Width)
-            if fraction_commune> seuil_comparaison:
+            if (frame%100 == 0) or (frame in liste_coupure_verite):
+                print(f"Frame : {frame} ; Nbr de pixel en commun : {nombre_pixel_bord_commun} ; Fraction de pixel commun : {round(fraction_commune,2)}")
+                cv2.imwrite(f'frame_{frame-2}.png', video_bord[frame-2])
+                cv2.imwrite(f'frame_{frame-1}.png', video_bord[frame-1])
+            if fraction_commune < seuil_comparaison:
                 liste_coupure.append(frame)
     return liste_coupure
 
@@ -140,7 +149,7 @@ def elargissement_bord(image_filtree,seuil): # fait un bord plus large et seuil 
 
 
 #%% Main
-vidObj = cv2.VideoCapture('D:/julbr/Documents/ecole/ECL/3A/MOD 5.3 Analyse de données/BE1_Traitement_et_analyse_des_données_visuelles_et_sonores 2020-21/MOD5.3-BE1/Pub_C+_176_144.mp4')
+vidObj = cv2.VideoCapture('D:/julbr/Documents/ecole/ECL/3A/MOD 5.3 Analyse de données/BE1_Traitement_et_analyse_des_données_visuelles_et_sonores 2020-21/MOD5.3-BE1/Pub_C+_176_144_cut.mp4')
 masque_base =np.array([[0,1,0],[1,-4,1],[0,1,0]])
 masque_horizontal = np.array([[-1,0,1],[-1,0,1],[-1,0,1]])
 masque_vertical = np.array([[-1,-1,-1],[0,0,0],[1,1,1]])
@@ -158,7 +167,7 @@ else:
 #    filtre = filtrage_geo_video_v1(gray, masque_base)
 #    print("Filtrage")
 #    plt.imshow(filtre[1450], cmap = plt.get_cmap('gray'))
-    coupure = filtrage_geo_video_v2(gray, masque_base, 150, 30)
+    coupure = filtrage_geo_video_v2(gray, masque_base, 120, 5)
     print(coupure)
 
 #%% Test image
