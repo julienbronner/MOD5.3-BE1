@@ -307,7 +307,7 @@ else:
             #print(Cross)
             Cross_sum = []
             for i in Cross :
-                if i[1:5].sum() > 2 :
+                if i[1:5].sum() > 1 :
                     Cross_sum.append(int(i[0]))
             #print(Cross_sum)
             Cross_sum = set(Cross_sum)
