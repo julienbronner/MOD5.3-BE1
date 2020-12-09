@@ -16,22 +16,22 @@ vidWidth  = int(vidObj.get(3)) # Nb de pixels en largeur
 vidHeight = int(vidObj.get(4)) # En hauteur
 fps = int(vidObj.get(cv2.CAP_PROP_FPS)) # On mesure le nombre d'image par seconde
 print('Largeur :', vidWidth, '; Hauteur :', vidHeight, "; Nb d'images :", nb_frames, "; fps :", fps)
-cercle_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
+cercle_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
 
-success,image1 = vidObj.read()
+success,image1 = vidObj.read(2)
 count = 1
 image_grey1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-image_dilate1 = cv2.dilate(cv2.Canny(image_grey1, 50,250), cercle_dilate)
+image_dilate1 = cv2.dilate(cv2.Canny(image_grey1, 100,200), cercle_dilate)
 liste_valeur = []
 
 #image_contour  = cv2.Canny(image_grey1, 100,200)
-#print(image_grey1)
+##print(image_grey1)
 #plt.figure()
 #plt.imshow(image_grey1, cmap = plt.get_cmap('gray'))
-#print(image_contour)
+##print(image_contour)
 #plt.figure()
 #plt.imshow(image_contour, cmap = plt.get_cmap('gray'))
-#print(image_dilate1)
+##print(image_dilate1)
 #plt.figure()
 #plt.imshow(image_dilate1, cmap = plt.get_cmap('gray'))
 
@@ -48,15 +48,15 @@ while count < nb_frames :
         m2=image_dilate1-m1
         m3=image_dilate2-m1
         moyenne_critere = math.sqrt((sum(sum(m2))/sum(sum(image_dilate1))) * (sum(sum(m3))/sum(sum(image_dilate2)))) / (sum(sum(m1))/ ((sum(sum(image_dilate1))+sum(sum(image_dilate2))))/2) 
-    
+        
 #        print( sum(sum(critere2)), sum(sum(critere3)))
-#        moyenne_critere = sum(sum(critere2))
+#        moyenne_critere = sum(sum(m2))
         liste_valeur.append( moyenne_critere)
         image_dilate1 = image_dilate2
         image_grey1 = image_grey2
         count += 1
 #        plt.figure()
-#        plt.imshow(critere2, cmap = plt.get_cmap('gray'))
+#        plt.imshow(m1, cmap = plt.get_cmap('gray'))
     else :
         break
 
