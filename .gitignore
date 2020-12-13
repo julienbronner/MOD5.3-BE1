@@ -11,6 +11,11 @@ Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_2.png
 Evolution_des_erreurs_en_fonction_du_seuil_de_détection_de_noirs_gris.png
 Evolution_des_erreurs_en_fonction_du_seuil_de_détection_gris.png
 Visualisation du seuil de détection des noirs.png
+image_contour.png
+image_dilate.png
+image_grise.png
+courbe_geo.fig
+courbe_geo.jpg
 ProjectSettings.json
 slnx.sqlite
 VSWorkspaceState.json
